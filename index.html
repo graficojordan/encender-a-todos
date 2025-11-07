@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- El título de la pestaña ahora coincide -->
+    <title>Encender a todos</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Saira y Saira Condensed -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Saira:wght@100..900&family=Saira+Condensed:wght@100..900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Definición de la paleta y fuentes de la marca */
+        :root {
+            --negro-carbon: #0D0D0D;
+            /* CAMBIO DE COLOR */
+            --naranja: #F15A24;
+            --gris-humo: #A3A3A3;
+            --beige-gastado: #E3D7C9;
+            --font-titulo: 'Saira', sans-serif;
+            --font-texto: 'Saira Condensed', sans-serif;
+        }
+
+        /* Aplicación de la base oscura y tipografía */
+        body {
+            background-color: var(--negro-carbon);
+            color: var(--beige-gastado);
+            font-family: var(--font-texto);
+            /* Oculta el scroll horizontal que puede causar el jitter */
+            overflow-x: hidden;
+        }
+
+        /* Estilo para las tipografías */
+        .font-saira { font-family: var(--font-titulo); }
+        .font-saira-condensed { font-family: var(--font-texto); }
+
+        /* Colores de la paleta */
+        .bg-negro { background-color: var(--negro-carbon); }
+        .text-beige { color: var(--beige-gastado); }
+        .text-gris { color: var(--gris-humo); }
+        .text-naranja { color: var(--naranja); }
+
+        /* Estilo de selección de texto para incomodidad */
+        ::selection {
+            background-color: var(--naranja);
+            color: var(--negro-carbon);
+        }
+
+        /* Animación de "Jitter" (Vibración) para el pánico */
+        @keyframes jitter {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-1px, 1px); }
+            50% { transform: translate(1px, -1px) scale(1.01); }
+            75% { transform: translate(1px, 1px); }
+        }
+
+        .jitter {
+            /* La animación es sutil pero constante */
+            animation: jitter 0.1s infinite;
+        }
+
+        /* Clases para los "susurros" de fondo */
+        .whisper {
+            /* Mantenemos 'fixed' para que floten sobre todo */
+            position: fixed;
+            font-family: var(--font-titulo);
+            font-weight: 900;
+            font-size: 10vw; /* Tamaño muy grande */
+            color: var(--gris-humo);
+            /* INVISIBLES POR DEFECTO */
+            opacity: 0; 
+            z-index: 0;
+            user-select: none; /* No seleccionable */
+            /* Transición suave para apariciones */
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            will-change: opacity, transform;
+            /* Centrado base (será sobrescrito por la grilla) */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+        }
+
+        /* Contenedor principal para el scrollytelling */
+        .scroll-container {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Cada "palabra" o "frase" es un bloque de scroll */
+        .scroll-step {
+            min-height: 100vh; /* Cada paso ocupa la pantalla */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Elementos de texto que se superponen */
+        .overlay-text {
+            position: sticky;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            /* El centrado vertical será nuestro 'orden' base */
+            align-items: center; 
+            /* Eliminamos el centrado horizontal para usar la grilla */
+            /* justify-content: center; */
+            padding: 2rem;
+            will-change: opacity, transform, font-variation-settings;
+            /* La transición suave es clave */
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out, font-variation-settings 0.5s ease-out;
+        }
+        
+        /* --- NUEVOS ESTILOS PARA SECCIÓN INTERACTIVA --- */
+
+        /* Estilo para el input */
+        #whisper-input::placeholder {
+            color: var(--gris-humo);
+            opacity: 0.5;
+            font-style: italic;
+        }
+
+        /* Estilo para los susurros generados por el usuario */
+        .user-whisper {
+            position: absolute;
+            font-family: var(--font-titulo);
+            font-weight: 700;
+            color: var(--beige-gastado); /* El eco del usuario es más claro */
+            opacity: 0;
+            animation: fadeAndDrift 20s ease-out forwards;
+            user-select: none;
+            z-index: -1; /* Detrás del contenido principal */
+            text-shadow: 0 0 10px rgba(227, 215, 201, 0.2);
+        }
+        
+        @keyframes fadeAndDrift {
+            0% { 
+                opacity: 0; 
+                transform: translateY(0) scale(0.8); 
+            }
+            10% { 
+                opacity: 0.15; /* Aparece */
+                transform: translateY(-20px) scale(1);
+            }
+            80% { 
+                opacity: 0.05; 
+            }
+            100% { 
+                opacity: 0; 
+                transform: translateY(-250px) translateX(50px) scale(0.7); /* Se desvanece y se va */
+            }
+        }
+        /* --- FIN NUEVOS ESTILOS --- */
+
+    </style>
+</head>
+<body class="bg-negro text-beige font-saira-condensed">
+
+    <!-- SUSURROS DE FONDO (Controlados por Scroll y Grilla) -->
+    <!-- Contenedor fijo que respeta la grilla de 12 col -->
+    <div class="fixed top-0 left-0 w-full h-full grid grid-cols-12 gap-x-4 px-4 md:px-12 z-0">
+        <!-- Estos 'div' vacíos actúan como celdas de la grilla para los susurros -->
+        <div class="col-start-2 col-span-5 h-full relative">
+            <div id="whisper-1" class="whisper" style="top: 20%;">RUMOR</div>
+        </div>
+        <div class="col-start-8 col-span-4 h-full relative">
+            <div id="whisper-2" class="whisper text-right" style="top: 40%;">SILENCIO</div>
+        </div>
+        <div class="col-start-3 col-span-7 h-full relative">
+            <div id="whisper-3" class="whisper text-center" style="top: 70%;">MIEDO</div>
+        </div>
+    </div>
+
+    <!-- EXPERIENCIA DE SCROLL TIPOGRÁFICO -->
+    <main id="scroll-container" class="scroll-container">
+
+        <!-- 1. El Inicio Sutil -->
+        <section class="scroll-step" data-step="1">
+            <div class="overlay-text" id="text-1">
+                <!-- Contenedor de grilla de 12 columnas -->
+                <div class="w-full grid grid-cols-12 gap-x-4 px-4 md:px-12">
+                    <p class="col-start-2 col-span-6 text-3xl text-gris font-saira-condensed" style="font-variation-settings: 'wght' 200;">... dicen que...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. El Rumor Crece -->
+        <section class="scroll-step" data-step="2">
+            <div class="overlay-text" id="text-2">
+                <!-- Texto alineado a la derecha, rompiendo la simetría -->
+                <div class="w-full grid grid-cols-12 gap-x-4 px-4 md:px-12">
+                    <p class="col-start-5 col-span-8 text-6xl text-beige font-saira text-right" style="font-variation-settings: 'wght' 300;">algo va a pasar</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. La Frase Clave (Superposición) -->
+        <section class="scroll-step" data-step="3">
+            <div class="overlay-text" id="text-3">
+                <!-- Ocupa casi todo el ancho, desbordando el centro -->
+                <div class="w-full grid grid-cols-12 gap-x-4 px-4 md:px-12">
+                    <h1 class="col-start-1 col-span-10 text-8xl text-beige font-saira font-extrabold" style="font-variation-settings: 'wght' 700;">ALGO MUY GRAVE</h1>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. El Pánico (Naranja y Jitter) -->
+        <section class="scroll-step" data-step="4">
+            <div class="overlay-text" id="text-4">
+                <!-- Desplazado del inicio, rompiendo el eje izquierdo -->
+                <div class="w-full grid grid-cols-12 gap-x-4 px-4 md:px-12">
+                    <h2 class="col-start-2 col-span-11 text-9xl text-naranja font-saira font-black jitter" style="font-variation-settings: 'wght' 900;">VA A SUCEDER</h2>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. El Caos (Múltiples palabras) -->
+        <section class="scroll-step relative" data-step="5">
+            <div class="overlay-text" id="text-5">
+                <!-- Grilla con elementos superpuestos y rotos verticalmente -->
+                <div class="w-full h-full grid grid-cols-12 gap-x-4 px-4 md:px-12 items-center relative">
+                    <p class="col-start-2 col-span-5 text-6xl text-gris" style="font-variation-settings: 'wght' 300;">lo dicho</p>
+                    <p class="col-start-6 col-span-7 text-8xl text-beige font-bold text-right" style="font-variation-settings: 'wght' 700;">EL PUEBLO</p>
+                    <!-- Desplazamiento vertical para romper el eje -->
+                    <p class="col-start-3 col-span-5 text-5xl text-gris mt-24 md:mt-48" style="font-variation-settings: 'wght' 300;">lo no dicho</p>
+                    <!-- Superposición absoluta, rompiendo totalmente la grilla -->
+                    <p class="text-9xl text-naranja font-black absolute opacity-50 jitter col-start-1 col-span-12 text-center" style="font-variation-settings: 'wght' 900;">PÁNICO</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. La Consecuencia (Opresión) -->
+        <section class="scroll-step" data-step="6">
+            <div class="overlay-text" id="text-6">
+                <!-- Orden brutalista y centrado -->
+                <div class="w-full grid grid-cols-12 gap-x-4 px-4 md:px-12">
+                    <h3 class="col-start-1 col-span-12 text-center text-[12vw] leading-none text-beige font-saira-condensed font-black" style="font-variation-settings: 'wght' 900; line-height: 0.8;">ASAMBLEA DEL MIEDO</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. El Final (Silencio / Ruptura) -->
+        <!-- 'items-start' rompe el centrado vertical de la grilla -->
+        <section class="scroll-step" data-step="7">
+            <div class="overlay-text items-start pt-24 md:pt-32" id="text-7">
+                <div class="w-full grid grid-cols-12 gap-x-4 px-4 md:px-12">
+                    <p class="col-start-3 col-span-9 text-7xl text-naranja font-saira jitter" style="font-variation-settings: 'wght' 800;">1111111111</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. Cierre -->
+        <!-- 'items-end' para la tensión final -->
+        <section class="scroll-step" data-step="8">
+            <div class="overlay-text items-end pb-20 md:pb-32" id="text-8">
+                <div class="w-full grid grid-cols-12 gap-x-4 px-4 md:px-12">
+                    <h4 class="col-start-1 md:col-start-2 col-span-12 md:col-span-10 text-center text-4xl text-gris font-saira-condensed" style="font-variation-settings: 'wght' 300;">una voz basta para encender a todos</h4>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. SECCIÓN INTERACTIVA (La Huella) -->
+        <section class="scroll-step" data-step="9">
+            <div class="overlay-text items-center" id="text-9">
+                <div class="w-full grid grid-cols-12 gap-x-4 px-4 md:px-12 text-center">
+                    <div class="col-start-1 md:col-start-3 col-span-12 md:col-span-8">
+                        <h5 class="text-3xl text-gris font-saira-condensed mb-8" style="font-variation-settings: 'wght' 300;">dejá la tuya</h5>
+                        
+                        <!-- Formulario poético -->
+                        <form id="whisper-form" class="flex justify-center items-center">
+                            <input type="text" id="whisper-input" maxlength="25" class="w-full md:w-2/3 font-saira text-2xl bg-transparent border-b-2 border-gris-humo text-beige text-center focus:outline-none focus:border-naranja transition-all duration-300" placeholder="...una palabra...">
+                            <button type="submit" class="text-3xl text-naranja font-saira ml-4 hover:scale-125 transition-transform duration-200">&rarr;</button>
+                        </form>
+                        
+                        <p id="form-thanks" class="text-gris text-lg mt-6 opacity-0 transition-opacity duration-500">Tu eco se une al resto.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Espaciador para forzar el scroll -->
+        <div class="h-[100vh]"></div>
+
+    </main>
+
+    <!-- Contenedor para los susurros del usuario -->
+    <div id="user-whisper-container" class="fixed top-0 left-0 w-full h-full z-0 overflow-hidden pointer-events-none">
+        <!-- Los nuevos susurros se añadirán aquí con JS -->
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const steps = document.querySelectorAll('.scroll-step');
+            const texts = document.querySelectorAll('.overlay-text');
+            const whispers = [
+                document.getElementById('whisper-1'),
+                document.getElementById('whisper-2'),
+                document.getElementById('whisper-3')
+            ];
+
+            // --- SECCIÓN 1: Lógica de Susurros de Fondo ---
+            
+            // Función para resetear los susurros
+            function resetWhispers() {
+                whispers.forEach(w => {
+                    w.style.opacity = 0;
+                    w.style.transform = 'translate(-50%, -50%) scale(0.95)';
+                });
+            }
+
+            // Función para activar susurros específicos
+            function setWhisperState(activeWhispers) {
+                resetWhispers();
+                // CORRECCIÓN: Cambiado 'activeWhisGpers' a 'activeWhispers'
+                if (activeWhispers.includes(1)) {
+                    whispers[0].style.opacity = 0.05;
+                    whispers[0].style.transform = 'translate(0, 0) scale(1)';
+                }
+                if (activeWhispers.includes(2)) {
+                    whispers[1].style.opacity = 0.05;
+                    whispers[1].style.transform = 'translate(0, 0) scale(1)';
+                }
+                if (activeWhispers.includes(3)) {
+                    whispers[2].style.opacity = 0.05;
+                    whispers[2].style.transform = 'translate(0, 0) scale(1)';
+                }
+            }
+
+
+            // --- SECCIÓN 2: Lógica de Scrollytelling (Observador) ---
+            
+            // Ocultar todos los textos al inicio
+            texts.forEach(text => {
+                text.style.opacity = 0;
+                text.style.transform = 'scale(0.95)';
+            });
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const step = entry.target.dataset.step;
+                    const textElement = document.getElementById(`text-${step}`);
+
+                    if (entry.isIntersecting) {
+                        // El paso está entrando en la vista
+                        textElement.style.opacity = 1;
+                        textElement.style.transform = 'scale(1)';
+                        
+                        // Lógica de susurros sincronizada con el scroll
+                        switch (step) {
+                            case '2':
+                            case '3':
+                                setWhisperState([1]); // Aparece "RUMOR"
+                                break;
+                            case '4':
+                            case '5':
+                                // "PÁNICO" - Aparecen todos
+                                setWhisperState([1, 2, 3]);
+                                whispers[0].style.transform = 'translate(0, 0) scale(1.1)'; // Vibra
+                                break;
+                            case '6':
+                            case '7':
+                                setWhisperState([2]); // Queda "SILENCIO"
+                                break;
+                            case '8':
+                            case '9':
+                                setWhisperState([]); // Se van al final
+                                break;
+                            default:
+                                resetWhispers();
+                        }
+                        
+                        // Lógica especial de superposición de texto
+                        if (step === '3') {
+                            document.getElementById('text-2').style.transform = 'scale(0.8)';
+                            document.getElementById('text-2').style.opacity = 0.5;
+                        }
+                        if (step === '4') {
+                            document.getElementById('text-3').style.opacity = 0.1;
+                        }
+                        if (step === '5') {
+                            document.getElementById('text-4').style.opacity = 0.3;
+                            document.getElementById('text-4').style.transform = 'scale(1.2)';
+                        }
+                        if (step === '6') {
+                            document.getElementById('text-5').style.opacity = 0;
+                            document.getElementById('text-5').style.transform = 'scale(0.9)';
+                        }
+                        
+                    } else {
+                        // El paso está saliendo de la vista
+                        textElement.style.opacity = 0;
+                        textElement.style.transform = 'scale(0.95)';
+                    }
+                });
+            }, {
+                threshold: 0.5 // Se activa cuando el 50% del paso es visible
+            });
+
+            // Observar cada paso
+            steps.forEach(step => observer.observe(step));
+            
+            // Activar el primer paso manualmente al cargar
+            document.getElementById('text-1').style.opacity = 1;
+            document.getElementById('text-1').style.transform = 'scale(1)';
+
+
+            // --- SECCIÓN 3: Lógica del Formulario Interactivo ---
+
+            const whisperForm = document.getElementById('whisper-form');
+            const whisperInput = document.getElementById('whisper-input');
+            const whisperContainer = document.getElementById('user-whisper-container');
+            const thanksMessage = document.getElementById('form-thanks');
+
+            whisperForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const text = whisperInput.value.trim();
+
+                if (text.length > 0) {
+                    createUserWhisper(text);
+                    whisperInput.value = '';
+                    
+                    // Mostrar mensaje de agradecimiento y ocultarlo
+                    thanksMessage.style.opacity = 1;
+                    setTimeout(() => {
+                        thanksMessage.style.opacity = 0;
+                    }, 3000);
+                }
+            });
+
+            function createUserWhisper(text) {
+                const whisper = document.createElement('div');
+                whisper.classList.add('user-whisper');
+                whisper.textContent = text;
+
+                // Posicionamiento aleatorio poético
+                whisper.style.top = `${Math.random() * 80 + 10}%`; // Entre 10% y 90%
+                whisper.style.left = `${Math.random() * 80 + 10}%`;
+                whisper.style.fontSize = `${Math.random() * 4 + 2}rem`; // Entre 2rem y 6rem
+                
+                whisperContainer.appendChild(whisper);
+
+                // Limpieza del DOM: eliminar el elemento después de la animación
+                setTimeout(() => {
+                    whisper.remove();
+                }, 20000); // Coincide con la duración de la animación
+            }
+        });
+    </script>
+</body>
+</html>
