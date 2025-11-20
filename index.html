@@ -284,8 +284,37 @@
             </div>
         </section>
         
-        <!-- Espaciador para forzar el scroll -->
-        <div class="h-[100vh]"></div>
+        <!-- NUEVA SECCIÓN: PIE DE PÁGINA TRANSMEDIA -->
+        <!-- Reemplazamos el espaciador simple por un footer con presencia visual y mucho aire superior (pt-32) -->
+        <footer class="min-h-screen flex flex-col justify-center items-center relative z-10 pb-20 pt-32 bg-negro">
+            
+            <div class="grid gap-20 md:gap-24 text-center px-4 w-full max-w-5xl">
+                
+                <!-- Pieza 1: Inmersión Sonora -->
+                <a href="https://drive.google.com/file/d/1vtNhChiYnwUjfjj03RqzqJsmN5o6Crnf/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="group block transition-all duration-500 hover:opacity-90">
+                    <h3 class="text-4xl md:text-6xl text-naranja font-saira font-black mb-3 group-hover:tracking-widest transition-all duration-500">"1111111"</h3>
+                    <span class="text-xl md:text-2xl text-beige font-saira-condensed tracking-[0.3em] border-b border-gris-humo pb-1 uppercase">Inmersión Sonora</span>
+                </a>
+
+                <!-- Pieza 2: Audiovisual -->
+                <a href="https://drive.google.com/file/d/1CrLHrxIY8gNKmA7zRKg9dpHzoZSyuL15/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="group block transition-all duration-500 hover:opacity-90">
+                    <h3 class="text-4xl md:text-6xl text-naranja font-saira font-black mb-3 group-hover:tracking-widest transition-all duration-500">"Común monóculo"</h3>
+                    <span class="text-xl md:text-2xl text-beige font-saira-condensed tracking-[0.3em] border-b border-gris-humo pb-1 uppercase">Audiovisual</span>
+                </a>
+
+                <!-- Pieza 3: Web -->
+                <a href="https://graficojordan.github.io/archivo-lucido/" target="_blank" rel="noopener noreferrer" class="group block transition-all duration-500 hover:opacity-90">
+                    <h3 class="text-4xl md:text-6xl text-naranja font-saira font-black mb-3 group-hover:tracking-widest transition-all duration-500">"Archivo lúcido"</h3>
+                    <span class="text-xl md:text-2xl text-beige font-saira-condensed tracking-[0.3em] border-b border-gris-humo pb-1 uppercase">Web</span>
+                </a>
+
+            </div>
+
+            <!-- Firma sutil al final -->
+            <div class="mt-32 text-gris text-sm opacity-30 font-saira-condensed tracking-widest">
+                <p>PRESAGIO COMÚN | PROYECTO TRANSMEDIA</p>
+            </div>
+        </footer>
 
     </main>
 
@@ -345,9 +374,10 @@
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     const step = entry.target.dataset.step;
+                    // Verificamos que exista un texto asociado a este paso (por si acaso observamos el footer sin data-step)
                     const textElement = document.getElementById(`text-${step}`);
 
-                    if (entry.isIntersecting) {
+                    if (textElement && entry.isIntersecting) {
                         // El paso está entrando en la vista
                         textElement.style.opacity = 1;
                         textElement.style.transform = 'scale(1)';
@@ -393,7 +423,7 @@
                             document.getElementById('text-5').style.transform = 'scale(0.9)';
                         }
                         
-                    } else {
+                    } else if (textElement) {
                         // El paso está saliendo de la vista
                         textElement.style.opacity = 0;
                         textElement.style.transform = 'scale(0.95)';
